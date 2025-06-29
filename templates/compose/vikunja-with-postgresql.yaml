@@ -22,7 +22,7 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
-  postgresql:
+  vikunja-db:
     image: postgres:16-alpine
     volumes:
       - vikunja-postgresql-data:/var/lib/postgresql/data
