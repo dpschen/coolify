@@ -6,32 +6,42 @@
 
 services:
   vikunja:
-    image: vikunja/vikunja
+    image: vikunja/vikunja:latest
     environment:
       - SERVICE_FQDN_VIKUNJA
       - VIKUNJA_SERVICE_PUBLICURL=$SERVICE_FQDN_VIKUNJA
       - VIKUNJA_SERVICE_JWTSECRET=$SERVICE_PASSWORD_JWTSECRET
       - VIKUNJA_SERVICE_ENABLEREGISTRATION=true
+
+      # PostgreSQL configuration
       - VIKUNJA_DATABASE_TYPE=postgres
-      - VIKUNJA_DATABASE_HOST=postgresql
-      - VIKUNJA_DATABASE_PASSWORD=${SERVICE_PASSWORD_POSTGRESQL}
+      - VIKUNJA_DATABASE_HOST=vikunja-postgres-db
       - VIKUNJA_DATABASE_USER=${SERVICE_USER_POSTGRESQL}
+      - VIKUNJA_DATABASE_PASSWORD=${SERVICE_PASSWORD_POSTGRESQL}
       - VIKUNJA_DATABASE_DATABASE=${POSTGRESQL_DATABASE}
+      # Uncomment the following line if your PostgreSQL enforces SSL:
+      # - VIKUNJA_DATABASE_SSLMODE=require
+
     volumes:
       - vikunja-data:/app/vikunja/
     depends_on:
-      postgresql:
+      vikunja-postgres-db:
         condition: service_healthy
-  vikunja-db:
+
+  vikunja-postgres-db:
     image: postgres:16-alpine
-    volumes:
-      - vikunja-postgresql-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${SERVICE_USER_POSTGRESQL}
       - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRESQL}
       - POSTGRES_DB=${POSTGRESQL_DATABASE}
+    volumes:
+      - vikunja-postgresql-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 20s
       retries: 10
+
+volumes:
+  vikunja-data:
+  vikunja-postgresql-data:
